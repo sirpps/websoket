@@ -1,17 +1,15 @@
-FROM debian:stable-slim
+FROM solsson/websocat:latest
 
-# Install openssh + websockify
-RUN apt-get update && \
-    apt-get install -y openssh-server python3-websockify && \
-    mkdir -p /var/run/sshd
+# Install openssh-server
+RUN apk add --no-cache openssh-server bash
 
-# Buat user login
-RUN useradd -m -s /bin/bash user && echo "user:user" | chpasswd
+# Buat user SSH
+RUN adduser -D user && echo "user:user" | chpasswd
 
-# Expose port
-EXPOSE 22 8080
+# Jalankan sshd di port 2222
+RUN mkdir -p /var/run/sshd
+EXPOSE 2222 8080
 
-# Jalankan sshd + websockify
-CMD service ssh start && \
-    websockify 0.0.0.0:8080 localhost:22 --daemon && \
-    tail -f /dev/null
+# Entrypoint: jalanin sshd + websocat
+CMD /usr/sbin/sshd -D -p 2222 & \
+    websocat --binary ws-l:0.0.0.0:8080 tcp:127.0.0.1:2222
