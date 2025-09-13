@@ -1,15 +1,18 @@
 FROM solsson/websocat:latest
 
 # Install openssh-server
-RUN apk add --no-cache openssh-server bash
+USER root
+RUN apt-get update && \
+    apt-get install -y openssh-server && \
+    mkdir -p /var/run/sshd && \
+    echo "user:user" | chpasswd
 
-# Buat user SSH
-RUN adduser -D user && echo "user:user" | chpasswd
+# Buat user "user"
+RUN useradd -m user
 
-# Jalankan sshd di port 2222
-RUN mkdir -p /var/run/sshd
+# Expose port
 EXPOSE 2222 8080
 
-# Entrypoint: jalanin sshd + websocat
+# Start sshd di 2222 + bridge WebSocket 8080 -> 2222
 CMD /usr/sbin/sshd -D -p 2222 & \
     websocat --binary ws-l:0.0.0.0:8080 tcp:127.0.0.1:2222
