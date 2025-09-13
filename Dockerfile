@@ -3,7 +3,7 @@ FROM debian:stable-slim
 # Install openssh + websockify
 RUN apt-get update && \
     apt-get install -y openssh-server python3-websockify && \
-    mkdir /var/run/sshd
+    mkdir -p /var/run/sshd
 
 # Buat user login
 RUN useradd -m -s /bin/bash user && echo "user:user" | chpasswd
